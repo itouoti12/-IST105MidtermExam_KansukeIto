@@ -57,48 +57,57 @@ window.addEventListener("load", function () {
   document
     .getElementById("sign-in-button-with-phone")
     .addEventListener("click", function () {
-      let phone = document.getElementById("tel").value;
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-        "recaptcha-container"
-      );
-
+      // [START auth_phone_signin]
+      const phoneNumber = getPhoneNumberFromUserInput();
       const appVerifier = window.recaptchaVerifier;
       firebase
         .auth()
-        .signInWithPhoneNumber(phone, appVerifier)
+        .signInWithPhoneNumber(phoneNumber, appVerifier)
         .then((confirmationResult) => {
           // SMS sent. Prompt user to type the code from the message, then sign the
           // user in with confirmationResult.confirm(code).
           window.confirmationResult = confirmationResult;
-
-          const code = getCodeFromUserInput();
-          confirmationResult
-            .confirm(code)
-            .then((result) => {
-              // User signed in successfully.
-              const user = result.user;
-              var credential = firebase.auth.PhoneAuthProvider.credential(
-                confirmationResult.verificationId,
-                code
-              );
-              firebase.auth().signInWithCredential(credential);
-              // ...
-            })
-            .catch((error) => {
-              // User couldn't sign in (bad verification code?)
-              // ...
-            });
           // ...
         })
         .catch((error) => {
           // Error; SMS not sent
           // ...
-          grecaptcha.reset(window.recaptchaWidgetId);
-
-          // Or, if you haven't stored the widget ID:
-          window.recaptchaVerifier.render().then(function (widgetId) {
-            grecaptcha.reset(widgetId);
-          });
         });
+      // [END auth_phone_signin]
     });
 });
+
+function recaptchaRender() {
+  /** @type {firebase.auth.RecaptchaVerifier} */
+  const recaptchaVerifier = window.recaptchaVerifier;
+
+  // [START auth_phone_recaptcha_render]
+  recaptchaVerifier.render().then((widgetId) => {
+    window.recaptchaWidgetId = widgetId;
+  });
+  // [END auth_phone_recaptcha_render]
+}
+
+function phoneSignIn() {
+  // [START auth_phone_signin]
+  const phoneNumber = getPhoneNumberFromUserInput();
+  const appVerifier = window.recaptchaVerifier;
+  firebase
+    .auth()
+    .signInWithPhoneNumber(phoneNumber, appVerifier)
+    .then((confirmationResult) => {
+      // SMS sent. Prompt user to type the code from the message, then sign the
+      // user in with confirmationResult.confirm(code).
+      window.confirmationResult = confirmationResult;
+      // ...
+    })
+    .catch((error) => {
+      // Error; SMS not sent
+      // ...
+    });
+  // [END auth_phone_signin]
+}
+function getPhoneNumberFromUserInput() {
+  let phone = document.getElementById("tel").value;
+  return phone;
+}
